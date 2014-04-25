@@ -1,0 +1,8 @@
+--- 
+cwd: /var/www/mateme/
+log_file: /var/www/mateme/log/mongrel.log
+port: 3003
+environment: development
+address: 127.0.0.1
+pid_file:  /var/www/mateme/tmp/pids/mongrel.pid
+servers: 1

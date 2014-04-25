@@ -1,0 +1,96 @@
+<script type="text/javascript">
+    tt_cancel_destination = '/people';
+</script>
+    <%= javascript_include_tag "utils" %>
+</style>
+<div id="dashboard">
+    <%= render :partial => "details" %>    
+    <div id="project_name" >DM</div>
+    <div id="custom_banner" path="/patients/graph?patient_id=<%= @patient.id %>"></div>
+    
+    <select id="links">
+        <option value='/encounters/outcome?patient_id=<%= @patient.id -%>'>Outcome</option>
+        <%if @doctor%>
+            <option value='/encounters/new/first_time_visit_questions?patient_id=<%= @patient.id -%>'>Medical history</option>
+            <option value='/encounters/new/vitals?patient_id=<%= @patient.id -%>'>Enter Vitals</option>
+            <option value='/encounters/new/lab_results?patient_id=<%= @patient.id -%>'>Lab Results</option>
+            <option value='/patients/mastercard?patient_id=<%= @patient.id -%>'>Complications</option>
+            <option value='/prescriptions/?patient_id=<%= @patient.id -%>'>Treatments</option>
+            <option value='/patients/hiv_status?patient_id=<%= @patient.id -%>'>HIV/ART Status</option>
+            <option value='/patients/generate_booking?patient_id=<%= @patient.id -%>'>Bookings</option>      
+            <option value='/patients/print_visit?patient_id=<%= @patient.id -%>'>Print Visit</option>
+            <option value='/patients/print_registration?patient_id=<%= @patient.id -%>'>Print Registration</option>
+        <%end %>
+
+        <%if @clinician%>
+            <option value='/encounters/new/hiv_status?patient_id=<%= @patient.id -%>'>HIV/ART Status</option>
+            <option value='/encounters/new/vitals?patient_id=<%= @patient.id -%>'>Enter Vitals</option>
+        <%end %>
+
+        <%if @nurse%>
+
+            <option value='/encounters/new/vitals?patient_id=<%= @patient.id -%>'>Enter Vitals</option>
+
+            <option value='/patients/mastercard?patient_id=<%= @patient.id -%>'>Complications</option>
+            <option value='/patients/demographics?patient_id=<%= @patient.id -%>'>Edit Demographics</option>
+
+            <option value='/patients/print_registration?patient_id=<%= @patient.id -%>'>Print Registration</option>
+            <option value='/patients/print_visit?patient_id=<%= @patient.id -%>'>Print Visit</option>
+        <%end %>
+
+        <%if @registration_clerk%>            
+            <option value='/patients/print_registration?patient_id=<%= @patient.id -%>'>Print Registration</option>
+            <option value='/patients/generate_booking?patient_id=<%= @patient.id -%>'>Bookings</option>
+        <%end %>
+
+
+        <%if @super_user%>
+            <option value='/encounters/new/first_time_visit_questions?patient_id=<%= @patient.id -%>'>Medical history</option>
+            <option value='/encounters/new/vitals?patient_id=<%= @patient.id -%>'>Enter Vitals</option>
+            <option value='/encounters/new/lab_results?patient_id=<%= @patient.id -%>'>Lab Results</option>
+            <option value='/patients/mastercard?patient_id=<%= @patient.id -%>'>Complications</option>
+            <option value='/prescriptions/?patient_id=<%= @patient.id -%>'>Treatments</option>
+            <option value='/patients/hiv_status?patient_id=<%= @patient.id -%>'>HIV/ART Status</option>
+            <option value='/patients/generate_booking?patient_id=<%= @patient.id -%>'>Bookings</option>
+            <!--option value='/patients/demographics?patient_id=<%= @patient.id -%>'>Edit Demographics</option-->
+            <option value='/patients/print_visit?patient_id=<%= @patient.id -%>'>Print Visit</option>
+        <%end %>
+                    
+    </select>
+    
+    <select id="tabs">
+        <!-- <option value="/patients/simple_graph?id=<%#= @patient.id -%>">Graph</option> -->
+        <option value="/patients/current_encounters?id=<%= @patient.id -%>">Visit Summary</option>
+        <option value="/patients/diabetes_treatments?id=<%= @patient.id -%>">Current Medication</option>
+        <option value="/patients/recent_screen_complications?id=<%= @patient.id -%>" 
+                <%= (@highlight ? " selectedTab='true'" : "") %> >Recent Complications</option>
+        <option value="/patients/important_medical_history?id=<%= @patient.id -%>">Medical History</option>
+        <option value="/patients/hiv?id=<%= @patient.id -%>" 
+                <%= (@hivHighlight ? " selectedTab='true'" : "") %> >HIV Status</option>
+    </select>
+
+    <select id="navigation_links">
+      <option link="/people">Finish</option>
+        <option link='<%= ((session[:datetime].to_date rescue '') != '' ?
+                    "/people/reset_datetime/#{@patient.id}" : "/people/set_datetime/#{@patient.id}") %>'  ttSize="160px">
+          <%= ((session[:datetime].to_date rescue '') != '' ? "Reset Date" : "Set Date") %></option>
+        <option value='/patients/demographics?patient_id=<%= @patient.id -%>' 
+                link='/patients/demographics?patient_id=<%= @patient.id -%>'>Edit Demographics</option>
+    </select>
+</div>
+<!--
+    <div style="margin:10px;">
+      <div id="details" style="float:left">
+
+        <% #if @super_user || @doctor || @nurse%>
+          <%#= render :partial => "simple_graph", :locals=>{:fields=>@patient}  rescue nil%>
+        <%#end%>
+        <%#= render :partial => "patient_visit_summary" %>
+        
+  </div>
+  <div id="menu">
+
+ 
+  </div>
+</div>  
+-->

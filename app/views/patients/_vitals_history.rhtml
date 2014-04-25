@@ -1,0 +1,17 @@
+<div id =" patient_history" style="position: relative; right: -361px; top: 0px;">
+   <center><h3> Vitals History</h3></center>
+<div style="font-size: 1.1em;">
+  <ul class="list" style="height: 210px; width: 350px;">
+    <table cellpadding="2" cellspacing="0" border ="1" width="100%">
+      <% for vital in @vitals do %>
+        <%if (vital.name.to_s.upcase == "VITALS")%>
+      <tr class ="data <%= cycle('even', 'odd')%>" >
+        <td class="dottedTableBorder"> <%=h("#{vital.encounter_datetime.strftime("%d-%b-%Y")}") %></td>
+        <td class="dottedTableBorder"> <%= h("#{vital.to_s}") %></td>
+      </tr>
+      <%end%>
+      <% end %>
+  </table>
+  </ul>
+  </div>
+  </div>

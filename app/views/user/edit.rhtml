@@ -1,0 +1,12 @@
+<script type="text/javascript">
+  tt_cancel_destination = "/people?active_tab=tab3";
+  tt_cancel_show = "/people?active_tab=tab3";
+</script>
+
+<% form_tag :action => 'update', :id => @user do %>
+  <%= render :partial => 'form' %>
+  <%= submit_tag 'Edit' %>
+<% end %>
+
+<%= link_to 'Show', :action => 'show', :id => @user %> |
+<%= link_to 'Back', :action => 'list' %>

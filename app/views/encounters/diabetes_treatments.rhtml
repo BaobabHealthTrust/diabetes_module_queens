@@ -1,0 +1,395 @@
+<%= @destination_page =  "/encounters/new/first_time_visit_questions?patient_id=" + @patient.id.to_s %>
+<%
+
+if(params[:encounter_id] && params[:group_type])
+  @encounter_obs = Encounter.encounter_observations(params[:encounter_id], params[:group_type]) rescue nil
+end
+
+%>
+<script>
+  var tt_cancel_destination = "<%= @destination_page -%>"
+  var months = ["Unkown", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"]
+
+  var my_date =[];
+
+  var time  = new Date();
+  var this_year  = time.getYear();
+  var estimated_date =[];
+
+<%
+
+unless(params[:encounter_id])
+%>
+  <%= "var save_state = true;" %>
+<%
+end
+
+%>
+  if (this_year < 2000){
+    this_year=(time.getYear() + 1900);
+  }
+
+  function setConceptNamesAndValues(){
+
+    var values_string = selectedValue('diabetes_treatements');
+
+    $('diet').value = ' ';
+    $('diet_value_coded_or_text').value = ' ';
+    $("glibenclamide").value = ' ';
+    $('glibenclamide_value_coded_or_text').value = ' ';
+    $('metformin').value = ' ';
+    $('metformin_value_coded_or_text').value = ' ';
+    $('insulin').value = ' ';
+    $('insulin_value_coded_or_text').value = ' ';
+
+
+    if(values_string.contains("ON DIET")){
+
+      $('diet').value = 'ON DIET';
+      $('diet_value_coded_or_text').value = 'Yes';
+
+    }
+
+    if(values_string.contains("GLIBENCLAMIDE")){
+
+      $("glibenclamide").value = 'GLIBENCLAMIDE';
+      $('glibenclamide_value_coded_or_text').value = 'Yes';
+
+    }
+
+    if(values_string.contains("METFORMIN")){
+
+      $('metformin').value = 'METFORMIN';
+      $('metformin_value_coded_or_text').value = 'Yes';
+
+    }
+    if(values_string.contains("INSULIN")){
+
+      $('insulin').value = 'INSULIN, SOLUBLE';
+      $('insulin_value_coded_or_text').value = 'Yes';
+
+    }
+  }
+</script>
+<form id='complications' action="/encounters/<%= ((params[:edit])?"update":"create") %>" method='post'>
+
+  <%= hidden_field_tag "encounter_id", "#{((params[:encounter_id])?params[:encounter_id]:"")}" %>
+
+  <%= hidden_field_tag "encounter[encounter_type_name]",  "DIABETES TREATMENTS" %>
+  <%= hidden_field_tag "encounter[patient_id]",           @patient.id %>
+  <%= hidden_field_tag "encounter[encounter_datetime]",   DateTime.now %>
+  <%= hidden_field_tag "encounter[provider_id]",          session[:user_id] %>
+
+  <% default={
+    :allowFreeText => 'true'
+  } %>
+  <%
+  @select_years = ["", "Unknown"]
+  this_year = Date.today.year
+  begin @select_years << Array.new(1){this_year.to_s}; this_year = this_year - 1; end while (this_year != 1949)
+%>
+
+  <% options=default.merge({
+      :field_type => 'text',
+      :helpText => "Select treatements taken since diagnosis:",
+      :id => "diabetes_treatements",
+      :tt_onUnLoad => "setConceptNamesAndValues()",
+      :multiple => true,
+      :tt_pageStyleClass => "MultiSelectList",
+      :optional => true
+    }) %>
+
+  <% @treatements_list = ["ON DIET", "GLIBENCLAMIDE", "METFORMIN", "INSULIN"] %>
+  <%= select_tag("diabetes_treatements_values",             options_for_select(@treatements_list, ((@encounter_obs)?(@encounter_obs["diabetes_treatments"]):"")),options) %>
+  
+  <% options=default.merge({
+      :helpText  => 'DIET: Year started',
+      :tt_requireNextClick => false,
+      :id => "diet_year_started",
+      :field_type => 'number', :absoluteMin => "1890",
+      :min => "1940", :absoluteMax => Date.today.year,
+      :condition => '$("diet").value == "ON DIET"',
+      :optional => true,  :multiple => false,
+      :absoluteMin => "1950", :min => "1940", :absoluteMax => Date.today.year,
+      :tt_onUnLoad => "onYearUpdateDateTime('diet_date_started', 'diet_year_started', 'diet_value_modifier');",
+      :tt_pageStyleClass => "LongSelectList"
+    } ) %>
+
+  <%= select_tag "diet[year_started]", options_for_select(@select_years, ((@encounter_obs)?(@encounter_obs["diet_year_started"]):"")),options %>
+
+  <%= select_tag "diet[month_started]", month_name_options(((@encounter_obs)?(@encounter_obs["diet_month_started"]):"")),{
+    :tt_requireNextClick => false,
+    :helpText  => 'DIET: Month started',
+    :id => "diet_month_started",
+    :tt_pageStyleClass => "LongSelectList",
+    :tt_onUnLoad => "onMonthUpdateDateTime('diet_date_started', 'diet_month_started', 'diet_value_modifier');",
+    :condition => '$("diet_value_coded_or_text").value.toLowerCase() == "yes" && $("diet_year_started").value.toLowerCase() != "unknown" && ((this_year - $("diet_year_started").value) <= 2)',
+    :tt_onLoad => "showProgressBar('finishButton');$('helpText'+tstCurrentPage).innerHTML = 'DIET: ' + $('diet_year_started').value + '-<font color=#FF0000>MMM</font>-DD'"
+  }%>
+
+  <%= hidden_field_tag("observations[][concept_name]",        "", {:id => 'diet'}) %>
+  <%= hidden_field_tag("observations[][date_started]",        "", {:id => 'diet_date_started'} ) %>
+  <%= hidden_field_tag("observations[][value_coded_or_text]", "", {:id => 'diet_value_coded_or_text'} ) %>
+  <%= hidden_field_tag("observations[][value_modifier]",      "", {:id => 'diet_value_modifier'} ) %>
+  <%= hidden_field_tag("observations[][patient_id]",          @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]",        DateTime.now()) %>
+  
+  <% options=default.merge({
+      :tt_requireNextClick => false,
+      :helpText  => 'GLIBENCLAMIDE: Year started',
+      :id => "glibenclamide_year_started",
+      :field_type => 'number', :absoluteMin => "1890",
+      :min => "1940", :absoluteMax => Date.today.year,
+      :optional => true,  :multiple => false,
+      :absoluteMin => "1950", :min => "1940", :absoluteMax => Date.today.year,
+      :condition => '$("glibenclamide").value == "GLIBENCLAMIDE"',
+      :tt_onUnLoad => "onYearUpdateDateTime('glibenclamide_date_started', 'glibenclamide_year_started', 'glibenclamide_value_modifier');",
+      :tt_pageStyleClass => "LongSelectList"
+    } ) %>
+
+  <%= select_tag "glibenclamide[year_started]", options_for_select(@select_years, ((@encounter_obs)?(@encounter_obs["glibenclamide_year_started"]):"")),options %>
+
+  <%= select_tag "glibenclamide[month_started]", month_name_options(((@encounter_obs)?(@encounter_obs["glibenclamide_year_started"]):"")),{
+    :tt_requireNextClick => false,
+    :helpText  => 'GLIBENCLAMIDE: Month started',
+    :id => "glibenclamide_month_started",
+    :tt_pageStyleClass => "LongSelectList",
+    :tt_onUnLoad => "onMonthUpdateDateTime('glibenclamide_date_started', 'glibenclamide_month_started', 'glibenclamide_value_modifier');",
+    :condition => '$("glibenclamide_value_coded_or_text").value.toLowerCase() == "yes" && $("glibenclamide_year_started").value.toLowerCase() != "unknown" && ((this_year - $("glibenclamide_date_started").value) <= 2)',
+    :tt_onLoad => "$('helpText'+tstCurrentPage).innerHTML = 'GLIBENCLAMIDE: ' + $('glibenclamide_year_started').value + '-<font color=#FF0000>MMM</font>-DD'"
+  }%>
+
+  <%= select_tag( "on_glibenclamide[value_coded_or_text]", options_for_select([
+        "",
+        "YES",
+        "NO"
+      ], ((@encounter_obs)?(@encounter_obs["on_glibenclamide"]):"")),{
+      :tt_requireNextClick => false,
+      :helpText  => 'GLIBENCLAMIDE: Taking now',
+      :field_type => 'text',
+      :tt_onUnLoad => "$('on_glibenclamide_value_coded_or_text').value = $('on_glibenclamide').value",
+      :id => "on_glibenclamide",
+      :condition => '$("glibenclamide_value_coded_or_text").value.toLowerCase() == "yes"'
+    } ) %>
+
+  <% options=default.merge({
+      :tt_requireNextClick => false,
+      :helpText  => 'GLIBENCLAMIDE: Year stopped',
+      :id => 'glibenclamide_year_stopped',
+      :field_type => 'number', :absoluteMin => "1890",
+      :condition =>"$('on_glibenclamide').value == 'No'",
+      :min => "1940", :absoluteMax => Date.today.year,
+      :optional => true,  :multiple => false,
+      :absoluteMin => "1950", :min => "1940", :absoluteMax => Date.today.year,
+      :tt_onUnLoad => "onYearUpdateDateTime('glibenclamide_date_stopped', 'glibenclamide_year_stopped', 'glibenclamide_value_modifier');",
+      :tt_pageStyleClass => "LongSelectList"
+    } ) %>
+
+  <%= select_tag 'glibenclamide_year_stopped', options_for_select(@select_years, ((@encounter_obs)?(@encounter_obs["gliben_year_stopped"]):"")),options %>
+
+  <%= select_tag "glibenclamide[month_stopped]", month_name_options(((@encounter_obs)?(@encounter_obs["glibenclamide_month_stopped"]):"")), {
+    :tt_requireNextClick => false,
+    :helpText  => 'GLIBENCLAMIDE: Month stopped',
+    :id => "glibenclamide_month_stopped",
+    :tt_pageStyleClass => "LongSelectList",
+    :tt_onUnLoad => "onMonthUpdateDateTime('glibenclamide_date_stopped', 'glibenclamide_month_stopped', 'glibenclamide_value_modifier');",
+    :condition => "$('on_glibenclamide').value == 'No' && $('glibenclamide_year_stopped').value.toLowerCase() != 'unknown' && ((this_year - $('glibenclamide_date_stopped').value) <= 2)",
+    :tt_onLoad => "$('helpText'+tstCurrentPage).innerHTML = 'GLIBENCLAMIDE: ' + $('glibenclamide_year_stopped').value + '-<font color=#FF0000>MMM</font>-DD'"
+  }%>
+
+  <%= hidden_field_tag("observations[][concept_name]",        "", {:id => 'glibenclamide'}) %>
+  <%= hidden_field_tag("observations[][value_coded_or_text]", "", {:id => 'glibenclamide_value_coded_or_text'} ) %>
+  <%= hidden_field_tag("observations[][value_modifier]",      "", {:id => 'glibenclamide_value_modifier'} ) %>
+  <%= hidden_field_tag("observations[][date_started]",        "", {:id => 'glibenclamide_date_started'} ) %>
+  <%= hidden_field_tag("observations[][date_stopped]",        "", {:id => 'glibenclamide_date_stopped'} ) %>
+  <%= hidden_field_tag("observations[][patient_id]",          @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]",        DateTime.now()) %>
+
+<!-- Save if the patient is taking medication now% -->
+  <%= hidden_field_tag("observations[][concept_name]",        "TAKING MEDICATION") %>
+  <%= hidden_field_tag("observations[][value_coded_or_text]", "", {:id => 'on_glibenclamide_value_coded_or_text'}) %>
+  <%= hidden_field_tag("observations[][parent_concept_name]", "GLIBENCLAMIDE" ) %>
+  <%= hidden_field_tag("observations[][patient_id]",          @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]",        DateTime.now()) %>
+
+  <% options=default.merge({
+      :tt_requireNextClick => false,
+      :helpText  => 'METFORMIN: Year started',
+      :id => "metformin_year_started",
+      :field_type => 'number', :absoluteMin => "1890",
+      :min => "1940", :absoluteMax => Date.today.year,
+      :optional => true,  :multiple => false,
+      :absoluteMin => "1950", :min => "1940", :absoluteMax => Date.today.year,
+      :condition => '$("metformin_value_coded_or_text").value.toLowerCase() == "yes"',
+      :tt_onUnLoad => "onYearUpdateDateTime('metformin_date_started', 'metformin_year_started', 'metformin_value_modifier');",
+      :tt_pageStyleClass => "LongSelectList"
+    } ) %>
+
+  <%= select_tag "metformin[year_started]", options_for_select(@select_years, ((@encounter_obs)?(@encounter_obs["metformin_year_started"]):"")),options %>
+
+  <%= select_tag "metformin[month_started]", month_name_options(((@encounter_obs)?(@encounter_obs["metformin_month_started"]):"")),{
+    :tt_requireNextClick => false,
+    :helpText  => 'METFORMIN: Month started',
+    :id => "metformin_month_started",
+    :tt_pageStyleClass => "LongSelectList",
+    :tt_onUnLoad => "onMonthUpdateDateTime('metformin_date_started', 'metformin_month_started', 'metformin_value_modifier');",
+    :condition => "$('metformin_value_coded_or_text').value.toLowerCase() == 'yes' && $('metformin_year_started').value.toLowerCase() != 'unknown' && ((this_year - $('metformin_date_started').value) <= 2)",
+    :tt_onLoad => "$('helpText'+tstCurrentPage).innerHTML = 'METFORMIN: ' + $('metformin_year_started').value + '-<font color=#FF0000>MMM</font>-DD'"
+  }%>
+
+  <%= select_tag( "on_metformin[value_coded_or_text]", options_for_select([
+        "",
+        "YES",
+        "NO"
+      ], ((@encounter_obs)?(@encounter_obs["on_metformin"]):"")),{
+      :tt_requireNextClick => false,
+      :helpText  => 'METFORMIN: Taking now',
+      :field_type => 'text',
+      :tt_onUnLoad => "$('on_metformin_value_coded_or_text').value = $('on_metformin').value",
+      :id => "on_metformin",
+      :condition => '$("metformin_value_coded_or_text").value.toLowerCase() == "yes"'
+    } ) %>
+
+  <% options=default.merge({
+      :tt_requireNextClick => false,
+      :helpText  => 'METFORMIN: Year stopped',
+      :id => 'metformin_year_stopped',
+      :condition =>"$('on_metformin').value == 'Yes'",
+      :field_type => 'number', :absoluteMin => "1890",
+      :min => "1940", :absoluteMax => Date.today.year,
+      :optional => true,  :multiple => false,
+      :absoluteMin => "1950", :min => "1940", :absoluteMax => Date.today.year,
+      :condition => "$('on_metformin').value == 'No'",
+      :tt_onUnLoad => "onYearUpdateDateTime('metformin_date_stopped', 'metformin_year_stopped', 'metformin_value_modifier');",
+      :tt_pageStyleClass => "LongSelectList"
+    } ) %>
+
+  <%= select_tag 'metformin_year_stopped', options_for_select(@select_years, ((@encounter_obs)?(@encounter_obs["metformin_year_stopped"]):"")),options %>
+
+  <%= select_tag "metformin[month_stopped]", month_name_options(((@encounter_obs)?(@encounter_obs["metformin_month_stopped"]):"")),{
+    :tt_requireNextClick => false,
+    :helpText  => 'METFORMIN: Month stopped',
+    :id => "metformin_month_stopped",
+    :tt_pageStyleClass => "LongSelectList",
+    :tt_onUnLoad => "onMonthUpdateDateTime('metformin_date_stopped', 'metformin_month_stopped', 'metformin_value_modifier');",
+    :condition => "$('on_metformin').value == 'No' && $('metformin_year_stopped').value.toLowerCase() != 'unknown' && ((this_year - $('metformin_date_stopped').value) <= 2)",
+    :tt_onLoad => "$('helpText'+tstCurrentPage).innerHTML = 'METFORMIN: ' + $('metformin_year_stopped').value + '-<font color=#FF0000>MMM</font>-DD'"
+  }%>
+
+  <%= hidden_field_tag("observations[][concept_name]",        "", {:id => 'metformin'}) %>
+  <%= hidden_field_tag("observations[][value_coded_or_text]", "", {:id => 'metformin_value_coded_or_text'} ) %>
+  <%= hidden_field_tag("observations[][value_modifier]",      "", {:id => 'metformin_value_modifier'} ) %>
+  <%= hidden_field_tag("observations[][date_started]",        "", {:id => 'metformin_date_started'} ) %>
+  <%= hidden_field_tag("observations[][date_stopped]",        "", {:id => 'metformin_date_stopped'} ) %>
+  <%= hidden_field_tag("observations[][patient_id]",          @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]",        DateTime.now()) %>
+
+<!-- Save if the patient is taking medication now -->
+  <%= hidden_field_tag("observations[][concept_name]",        "TAKING MEDICATION") %>
+  <%= hidden_field_tag("observations[][value_coded_or_text]", "", {:id => 'on_metformin_value_coded_or_text'}) %>
+  <%= hidden_field_tag("observations[][parent_concept_name]", 'METFORMIN') %>
+  <%= hidden_field_tag("observations[][patient_id]",          @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]",        DateTime.now()) %>
+
+  <% options=default.merge({
+      :tt_requireNextClick => false,
+      :helpText  => 'INSULIN: Year started',
+      :id => "insulin_year_started",
+      :field_type => 'number', :absoluteMin => "1890",
+      :min => "1940", :absoluteMax => Date.today.year,
+      :optional => true,  :multiple => false,
+      :absoluteMin => "1950", :min => "1940", :absoluteMax => Date.today.year,
+      :condition => '$("insulin_value_coded_or_text").value.toLowerCase() == "yes"',
+      :tt_onUnLoad => "onYearUpdateDateTime('insulin_date_started', 'insulin_year_started', 'insulin_value_modifier');",
+      :tt_pageStyleClass => "LongSelectList"
+    } ) %>
+
+  <%= select_tag "insulin[year_started]", options_for_select(@select_years, ((@encounter_obs)?(@encounter_obs["insulin_year_started"]):"")),options %>
+
+  <%= select_tag "insulin[month_started]", month_name_options(((@encounter_obs)?(@encounter_obs["insulin_month_started"]):"")),{
+    :tt_requireNextClick => false,
+    :helpText  => 'INSULIN: Month started',
+    :id => "insulin_month_started",
+    :tt_pageStyleClass => "LongSelectList",
+    :tt_onUnLoad => "onMonthUpdateDateTime('insulin_date_started', 'insulin_month_started', 'insulin_value_modifier');",
+    :condition => "$('insulin_value_coded_or_text').value.toLowerCase() == 'yes' && $('insulin_year_started').value.toLowerCase() != 'unknown' && ((this_year - $('insulin_date_started').value) <= 2)",
+    :tt_onLoad => "$('helpText'+tstCurrentPage).innerHTML = 'INSULIN: ' + $('insulin_year_started').value + '-<font color=#FF0000>MMM</font>-DD'"
+  }%>
+  <%= select_tag( "on_insulin[value_coded_or_text]", options_for_select([
+        "",
+        "Yes",
+        "No"
+      ], ((@encounter_obs)?(@encounter_obs["on_insulin"]):"")),{
+      :tt_requireNextClick => false,
+      :helpText  => 'INSULIN: Taking now',
+      :field_type => 'text',
+      :tt_onUnLoad => "$('on_insulin_value_coded_or_text').value = $('on_insulin').value",
+      :id => "on_insulin",
+      :condition => '$("insulin_value_coded_or_text").value.toLowerCase() == "yes"'
+    } ) %>
+
+  <% options=default.merge({
+      :tt_requireNextClick => false,
+      :helpText  => 'INSULIN: Year stopped',
+      :id => 'insulin_year_stopped',
+      :field_type => 'number', :absoluteMin => "1890",
+      :min => "1940", :absoluteMax => Date.today.year,
+      :optional => true,  :multiple => false,
+      :absoluteMin => "1950", :min => "1940", :absoluteMax => Date.today.year,
+      :condition => "$('on_insulin_value_coded_or_text').value.toLowerCase() == 'no'",
+      :tt_onUnLoad => "onYearUpdateDateTime('insulin_date_stopped', 'insulin_year_stopped', 'insulin_value_modifier');",
+      :tt_pageStyleClass => "LongSelectList"
+    } ) %>
+
+  <%= select_tag 'insulin_year_stopped', options_for_select(@select_years, ((@encounter_obs)?(@encounter_obs["insulin_year_stopped"]):"")),options %>
+
+  <%= select_tag "insulin[month_stopped]", month_name_options(((@encounter_obs)?(@encounter_obs["insulin_month_stopped"]):"")),{
+    :tt_requireNextClick => false,
+    :helpText  => 'INSULIN: Month stopped',
+    :id => "insulin_month_stopped",
+    :tt_pageStyleClass => "LongSelectList",
+    :condition => "$('on_insulin_value_coded_or_text').value.toLowerCase() == 'no' && $('insulin_year_stopped').value.toLowerCase() != 'unknown' && ((this_year - $('insulin_date_stopped').value) <= 2)",
+    :tt_onUnLoad => "onMonthUpdateDateTime('insulin_date_stopped', 'insulin_month_stopped', 'insulin_value_modifier');",
+    :tt_onLoad => "$('helpText'+tstCurrentPage).innerHTML = 'INSULIN: ' + $('insulin_year_stopped').value + '-<font color=#FF0000>MMM</font>-DD'"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]",        "", {:id => 'insulin'}) %>
+  <%= hidden_field_tag("observations[][value_coded_or_text]", "", {:id => 'insulin_value_coded_or_text'} ) %>
+  <%= hidden_field_tag("observations[][value_modifier]",      "", {:id => 'insulin_value_modifier'} ) %>
+  <%= hidden_field_tag("observations[][date_started]",        "", {:id => 'insulin_date_started'} ) %>
+  <%= hidden_field_tag("observations[][date_stopped]",        "", {:id => 'insulin_date_stopped'} ) %>
+  <%= hidden_field_tag("observations[][patient_id]",          @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]",        DateTime.now()) %>
+
+<!--Save if the patient is taking medication now -->
+  <%= hidden_field_tag("observations[][concept_name]",        "TAKING MEDICATION") %>
+  <%= hidden_field_tag("observations[][value_coded_or_text]", "", {:id => 'on_insulin_value_coded_or_text'}) %>
+  <%= hidden_field_tag("observations[][parent_concept_name]", "INSULIN, SOLUBLE" ) %>
+  <%= hidden_field_tag("observations[][patient_id]",          @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]",        DateTime.now()) %>
+
+  <%= select_tag "insulin[type]", options_for_select([
+      "",
+      "Long Acting Insulin",
+      "Short Acting Insulin"
+    ], ((@encounter_obs)?(@encounter_obs["insulin_type"]):"")),{
+    :id => "type_of_insulin",
+    :helpText  => 'Select type of Insulin',
+    :tt_onUnload => "$('insulin_value_coded_or_text').value = $('type_of_insulin').value.toUpperCase()",
+    :condition => '$("insulin_value_coded_or_text").value.toLowerCase() == "yes"',
+    :multiple => true,
+    :tt_pageStyleClass => "MultiSelectList"
+  }
+%>
+  <%= hidden_field_tag("observations[][concept_name]",        "TYPE OF INSULIN") %>
+  <%= hidden_field_tag("observations[][value_coded_or_text]", "", {:id => 'insulin_value_coded_or_text'} ) %>
+  <%= hidden_field_tag("observations[][value_modifier]",      "", {:id => 'insulin_value_modifier'} ) %>
+  <%= hidden_field_tag("observations[][date_started]",        "", {:id => 'insulin_date_started'} ) %>
+  <%= hidden_field_tag("observations[][date_stopped]",        "", {:id => 'insulin_date_stopped'} ) %>
+  <%= hidden_field_tag("observations[][patient_id]",          @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]",        DateTime.now()) %>
+
+  <%= hidden_field_tag("next_url",@destination_page) %>
+
+  <%= submit_tag("Finish",{:id=> 'finishButton'}) %>
+</form>

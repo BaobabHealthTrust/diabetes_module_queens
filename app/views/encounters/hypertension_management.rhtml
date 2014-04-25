@@ -1,0 +1,184 @@
+<%= @destination_page =  "/encounters/new/first_time_visit_questions?patient_id=" + @patient.id.to_s %>
+<%
+
+if(params[:encounter_id] && params[:group_type])
+@encounter_obs = Encounter.encounter_observations(params[:encounter_id], params[:group_type]) rescue nil
+end
+
+%>
+<script>
+  var tt_cancel_destination = "<%= @destination_page -%>"
+
+<%  unless(params[:encounter_id])%>
+  <%= "var save_state = true;" %>
+<%end%>
+
+  function setConceptNamesAndValues(){
+
+    var values_string = selectedValue('hypertension_management');
+
+    $('low_salt_diet').value = ' ';
+    $('low_salt_diet_value_coded_or_text').value = ' ';
+    $("sartan").value = ' ';
+    $('sartan_value_coded_or_text').value = ' ';
+    $('thiazide').value = ' ';
+    $('thiazide_value_coded_or_text').value = ' ';
+    $('frusemide').value = ' ';
+    $('frusemide_value_coded_or_text').value = ' ';
+    $('methyldopa').value = ' ';
+    $('methyldopa_value_coded_or_text').value = ' ';
+    $('beta_blocker').value = '';
+    $('beta_blocker_value_coded_or_text').value = ' ';
+    $('calcium_channel_blocker').value = '';
+    $('calcium_channel_blocker_value_coded_or_text').value = ' ';
+    $('aspirin').value = ' ';
+    $('aspirin_value_coded_or_text').value = ' ';
+
+    if(values_string.contains("PERIPHERAL NEUROPATHY")){
+
+      $('low_salt_diet').value = 'PERIPHERAL NEUROPATHY';
+      $('low_salt_diet_value_coded_or_text').value = 'Yes';
+
+    }
+
+    if(values_string.contains("ACE I/SALTAN")){
+
+      $("sartan").value = 'ACE I/SALTAN';
+      $('sartan_value_coded_or_text').value = 'Yes';
+
+    }
+
+    if(values_string.contains("THIAZIDE")){
+
+      $('thiazide').value = 'THIAZIDE';
+      $('thiazide_value_coded_or_text').value = 'Yes';
+
+    }
+    if(values_string.contains("FRUSEMIDE")){
+
+      $('frusemide').value = 'FRUSEMIDE';
+      $('frusemide_value_coded_or_text').value = 'Yes';
+
+    }
+
+    if(values_string.contains("METHYLDOPA")){
+
+      $('methyldopa').value = 'METHYLDOPA';
+      $('methyldopa_value_coded_or_text').value = 'Yes';
+
+    }
+
+    if(values_string.contains("BETA BLOCKER")){
+
+      $('beta_blocker').value = 'BETA BLOCKER';
+      $('beta_blocker_value_coded_or_text').value = 'Yes';
+
+    }
+    if(values_string.contains("CALCIUM CHANNEL BLOCKER")){
+
+      $('calcium_channel_blocker').value = 'CALCIUM CHANNEL BLOCKER';
+      $('calcium_channel_blocker_value_coded_or_text').value = 'Yes';
+
+    }
+
+    if(values_string.contains("ASPIRIN")){
+
+      $('aspirin').value = 'ASPIRIN';
+      $('aspirin_value_coded_or_text').value = 'Yes';
+
+    }
+
+  }
+</script>
+<form id='complications' action="/encounters/<%= ((params[:edit])?"update":"create") %>" method='post'>
+  <% default={
+    :allowFreeText => 'true'
+  } %>
+
+  <%= hidden_field_tag "encounter_id", "#{((params[:encounter_id])?params[:encounter_id]:"")}" %>
+
+  <%= hidden_field_tag "encounter[encounter_type_name]",  "HYPERTENSION MANAGEMENT" %>
+  <%= hidden_field_tag "encounter[patient_id]",           @patient.id %>
+  <%= hidden_field_tag "encounter[encounter_datetime]",   DateTime.now() %>
+  <%= hidden_field_tag "encounter[provider_id]",          session[:user_id] %>
+
+  <% options=default.merge({
+      :field_type => 'text',
+      :helpText => "Select hypertension treatement(s):",
+      :id => "hypertension_management",
+      :tt_onLoad => "addOnMouseDownAction(['LOW SALT DIET RECOMMENDED',
+    'ACE I/SALTAN', 'THIAZIDE', 'FRUSEMIDE', 'METHYLDOPA',
+    'BETA BLOCKER', 'CALCIUM CHANNEL BLOCKER'])",
+      :tt_onUnLoad => "setConceptNamesAndValues()",
+      :multiple => true,
+      :tt_pageStyleClass => "MultiSelectList",
+      :optional => true
+    }) %>
+
+  <% @hypertension_management_list = ["LOW SALT DIET RECOMMENDED", "ACE I/SALTAN",
+    "THIAZIDE", "FRUSEMIDE", "METHYLDOPA", "BETA BLOCKER",
+    "CALCIUM CHANNEL BLOCKER", "ASPIRIN"]%>
+  <%= select_tag("hypertension_management_values", options_for_select(@hypertension_management_list, ((@encounter_obs)?(@encounter_obs["hypertension_management"]):"")),options) %>
+
+  <%= hidden_field_tag("observations[][concept_name]",  "", {:id => 'low_salt_diet'}) %>
+  <%= hidden_field_tag("observations[][value_coded_or_text]",  "", {:id => "low_salt_diet_value_coded_or_text"}) %>
+  <%= hidden_field_tag("observations[][patient_id]",    @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]",  DateTime.now()) %>
+
+  <%= hidden_field_tag("observations[][concept_name]",  "", {:id => 'sartan'}) %>
+  <%= hidden_field_tag("observations[][value_coded_or_text]",  "",  {:id => "sartan_value_coded_or_text"}) %>
+  <%= hidden_field_tag("observations[][patient_id]",    @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]",  DateTime.now()) %>
+
+  <%= hidden_field_tag("observations[][concept_name]",        "", {:id => 'thiazide'}) %>
+  <%= hidden_field_tag("observations[][value_coded_or_text]", "",  {:id => "thiazide_value_coded_or_text"}) %>
+  <%= hidden_field_tag("observations[][patient_id]",          @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]",        DateTime.now()) %>
+
+  <%= hidden_field_tag("observations[][concept_name]",        "", {:id => 'frusemide'}) %>
+  <%= hidden_field_tag("observations[][value_coded_or_text]", "",  {:id => "frusemide_value_coded_or_text"}) %>
+  <%= hidden_field_tag("observations[][patient_id]",          @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]",        DateTime.now()) %>
+
+  <%= hidden_field_tag("observations[][concept_name]",        "", {:id => "methyldopa"}) %>
+  <%= hidden_field_tag("observations[][value_coded_or_text]", "",  {:id => "methyldopa_value_coded_or_text"}) %>
+  <%= hidden_field_tag("observations[][patient_id]",          @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]",        DateTime.now()) %>
+
+  <%= hidden_field_tag("observations[][concept_name]",  "", {:id => 'beta_blocker'}) %>
+  <%= hidden_field_tag("observations[][value_coded_or_text]",  "",  {:id => "beta_blocker_value_coded_or_text"}) %>
+  <%= hidden_field_tag("observations[][patient_id]",    @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]",  DateTime.now()) %>
+
+  <%= hidden_field_tag("observations[][concept_name]",        "", {:id => 'calcium_channel_blocker'}) %>
+  <%= hidden_field_tag("observations[][value_coded_or_text]", "",  {:id => "calcium_channel_blocker_value_coded_or_text"}) %>
+  <%= hidden_field_tag("observations[][patient_id]",          @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]",        DateTime.now()) %>
+
+  <%= hidden_field_tag("observations[][concept_name]",        "", {:id => 'aspirin'}) %>
+  <%= hidden_field_tag("observations[][value_coded_or_text]", "",  {:id => "aspirin_value_coded_or_text"}) %>
+  <%= hidden_field_tag("observations[][patient_id]",          @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]",        DateTime.now()) %>
+
+  <% options=default.merge({
+      :field_type => 'text',
+      :id => "on_aspirin",
+      :tt_onUnLoad => "$('on_aspirin_value_coded_or_text').value = $('on_aspirin').value",
+      :condition => "$('aspirin_value_coded_or_text').value == 'Yes'",
+      :helpText => "Currently Taking Aspirin?"
+    }) %>
+  <%= select_tag( "on_aspirin[value_coded_or_text]", options_for_select([
+        "",
+        "YES",
+        "NO"
+      ], ((@encounter_obs)?(@encounter_obs["on_aspirin"]):"")), options ) %>
+  <%= hidden_field_tag("observations[][concept_name]",        "TAKING MEDICATION") %>
+  <%= hidden_field_tag("observations[][value_coded_or_text]", "",  {:id => "on_aspirin_value_coded_or_text"}) %>
+  <%= hidden_field_tag("observations[][parent_concept_name]", "ASPIRIN") %>
+  <%= hidden_field_tag("observations[][patient_id]",          @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]",        DateTime.now()) %>
+
+  <%= hidden_field_tag("next_url",@destination_page) %>
+
+  <%= submit_tag "Finish" %>
+</form>

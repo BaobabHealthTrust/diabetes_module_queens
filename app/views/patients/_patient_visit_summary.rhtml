@@ -1,0 +1,38 @@
+<%= stylesheet_link_tag "tabs" %>
+<%= stylesheet_link_tag "miscellaneous" %>
+<div id ="tabbedcontent" style="float:left;">
+
+  <div id="tabmenu">
+    <ul>
+      <li id = "visit_summary_tab" onclick="javascript:displayTab(this, 'visit_summary','tabmenu','tabbedbody');" class="activated">Visit Summary</li>
+      <% if !User.current_user.user_roles.map(&:role).map(&:downcase).include?("registration clerk") %>
+      <li id = "current_medication_tab" onclick="javascript:displayTab(this, 'current_medication','tabmenu','tabbedbody');">Current Medication</li>
+      <li id = "recent_complications_tab" onclick="javascript:displayTab(this, 'recent_complications','tabmenu','tabbedbody');">Recent Complications</li>
+      <li id = "medical_history_tab" onclick="javascript:displayTab(this, 'medical_history','tabmenu','tabbedbody');">Medical History</li>
+      <li id = "hiv_status_tab" onclick="javascript:displayTab(this, 'hiv_status','tabmenu','tabbedbody');">HIV status</li>
+      <%end%>
+    </ul>
+  </div>
+
+  <div id="tabbedbody">
+    <div id="visit_summary" class="activated" style="overflow:auto">
+      <%=render :partial => "current_encounters" %>
+    </div>
+
+    <div id="current_medication" style="overflow:auto">
+      <%=render :partial => "diabetes_treatments"%>
+    </div>
+
+    <div id="recent_complications"  style="overflow:auto">
+      <%= render :partial => "recent_screen_complications" %>
+    </div>
+
+    <div id="medical_history"  style="overflow:auto">
+      <%= render :partial => "important_medical_history" %>
+    </div>
+
+    <div id="hiv_status"  style="overflow:auto">
+      <%= render :partial => "hiv_status" %>
+    </div>
+  </div>
+</div>

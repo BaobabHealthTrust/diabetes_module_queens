@@ -1,0 +1,44 @@
+<style type="text/css">
+   #overview { display:block; width:100%; border:none; margin:0; padding:0; height:100%; }
+</style>
+<script type="text/javascript">
+  tt_cancel_destination ='/logout';
+  tstCurrentDate = "<%= @date %>";
+  tt_cancel_show = '/people/search';
+  tt_active_tab = <%="'#{@tt_active_tab}'"%>
+ 
+</script>
+<div id="home">
+   <div id="project_name" >DM</div>
+    <div id="facility"><%= @facility %></div>
+    <div id="location">Reception</div>
+    <div id="user"><%=current_user.name%></div>
+    <% retrospective = 'false'
+       retrospective = 'true' if session[:datetime]
+    %>
+    <div id="date" retrospective="<%= retrospective %>"><%= @date %></div>
+    <div id="date"><%=Date.today%></div>
+    
+    <base target="_parent" />
+    
+    <select id="tabs">
+        <option value="/people/overview">Overview</option>
+        <% if @super_user || @doctor %>
+             <option value="/cohort">Reports</option> 
+        <% end %>       
+        <% if @super_user%>
+            <option value="/user/administration">Administration</option>
+     <%end%>
+    </select>
+    
+
+    <select id="links">
+        <option value="">Logout</option>
+        <option value="/people/search" ttSize="250px">Find by Name</option>
+        <option value="/people/identifiers" ttSize="250px">Find by DC Number</option>
+        <option value='<%= ((session[:datetime].to_date rescue '') != '' ?
+                          "/people/reset_datetime" : "/people/set_datetime") %>'  ttSize="100px">
+                <%= ((session[:datetime].to_date rescue '') != '' ? "Reset Date" : "Set Date") %></option>
+    </select>
+    
+</div>
